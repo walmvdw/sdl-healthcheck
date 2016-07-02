@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+    <!-- Properties -->
+    <property name="log.pattern" value="%date %-5level %logger{0} - %message%n"/>
+    <property name="log.history" value="7"/>
+    <property name="log.folder" value="${user.home}/sdl_web/logs/healthcheck"/>
+    <property name="log.level" value="TRACE"/>
+    <property name="log.encoding" value="UTF-8"/>
+
+    <!-- Appenders -->
+    <appender name="coreLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.folder}/core.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${log.history}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${log.encoding}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <prudent>true</prudent>
+    </appender>
+
+    <appender name="healthCheckLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.folder}/healthcheck.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${log.history}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${log.encoding}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <prudent>true</prudent>
+    </appender>
+    
+    <appender name="springLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.folder}/spring.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>${log.history}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${log.encoding}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <prudent>true</prudent>
+    </appender>
+
+    <!-- Loggers -->
+    <logger name="com.markwal.sdl.healthcheck" level="${log.level}">
+        <appender-ref ref="healthCheckLog"/>
+    </logger>
+    
+    <logger name="org.springframework" level="${log.level}">
+        <appender-ref ref="springLog"/>
+    </logger>
+
+
+    <root level="ERROR">
+        <appender-ref ref="coreLog"/>
+    </root>
+
+     
+</configuration>

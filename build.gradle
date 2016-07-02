@@ -16,6 +16,10 @@ jar {
     version =  '0.1.0'
 }
 
+bootRepackage {
+    mainClass = 'com.markwal.sdl.healthcheck.HealthCheckApplication'
+}
+
 repositories {
     mavenCentral()
 }
