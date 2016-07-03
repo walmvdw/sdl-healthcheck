@@ -44,7 +44,13 @@ public class HealthCheckController {
 	private Configuration config;
 	
 	private Map<String, ServiceConnection> connections = new HashMap<String, ServiceConnection>();
-			
+
+    @RequestMapping(value="/reload")
+    public String reload() {
+        this.config.resetServicesInfo();
+        return "ok";
+    }
+
     @RequestMapping(value="/status/{serviceName}", produces="application/json")
     public @ResponseBody ResponseEntity<ServiceStatus> status(@PathVariable String serviceName) {
     	if (LOG.isInfoEnabled()) {
@@ -95,6 +101,13 @@ public class HealthCheckController {
     public @ResponseBody ErrorResponse handleTokenException(Exception exc) {
 		LOG.warn("TokenException", exc);
     	return new ErrorResponse("TokenException: " + exc.getMessage());
+    }
+
+    @ExceptionHandler(HealthCheckException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public @ResponseBody ErrorResponse handleHealthCheckException(Exception exc) {
+        LOG.warn("HealthCheckException", exc);
+        return new ErrorResponse("HealthCheckException: " + exc.getMessage());
     }
 
 }
