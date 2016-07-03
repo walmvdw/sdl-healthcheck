@@ -18,9 +18,7 @@ package com.markwal.sdl.healthcheck.config;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.markwal.sdl.healthcheck.HealthCheckException;
 import org.slf4j.Logger;
@@ -144,10 +142,14 @@ public class Configuration {
         return servicesFile;
     }
 
-
     public void resetServicesInfo() {
         synchronized (serviceMapLock) {
             this.serviceMap = null;
         }
     }
+
+    public Set<String> getAllServiceNames() {
+        return this.getServices().keySet();
+    }
+
 }
