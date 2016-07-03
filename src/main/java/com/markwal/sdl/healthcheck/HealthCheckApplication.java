@@ -40,8 +40,6 @@ public class HealthCheckApplication {
 
         //ApplicationContext ctx = app.run(args);
         app.run(args);
-
-        System.out.println("Health Check Monitor started");
     }
 
 }
