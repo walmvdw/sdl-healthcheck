@@ -31,9 +31,9 @@ The URLs return an HTTP status code and JSON string with details. If there are n
 * /reload: reloads the configured services (from `./config/services.json`)
 
 Assuming that the web application is listening on the default port (8091) the URLs would be:
-* http://localhost:8091/status/discovery (to check the discovery micro service)
-* http://localhost:8091/all
-* http://localhost:8091/reload
+* <http://localhost:8091/status/discovery> (to check the discovery micro service)
+* <http://localhost:8091/all>
+* <http://localhost:8091/reload>
 
 ## Building from source
 
