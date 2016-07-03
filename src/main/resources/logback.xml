@@ -1,61 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 Mark van der Wal
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <configuration scan="true">
-    <!-- Properties -->
-    <property name="log.pattern" value="%date %-5level %logger{0} - %message%n"/>
-    <property name="log.history" value="7"/>
-    <property name="log.folder" value="${user.home}/sdl_web/logs/healthcheck"/>
-    <property name="log.level" value="TRACE"/>
-    <property name="log.encoding" value="UTF-8"/>
-    <!-- Appenders -->
-    <appender name="coreLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.folder}/core.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>${log.history}</maxHistory>
-        </rollingPolicy>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
         <encoder>
-            <charset>${log.encoding}</charset>
-            <pattern>${log.pattern}</pattern>
+            <pattern>%date %-5level %logger{0} - %message%n</pattern>
         </encoder>
-        <prudent>true</prudent>
     </appender>
 
-    <appender name="healthCheckLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.folder}/healthcheck.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>${log.history}</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <charset>${log.encoding}</charset>
-            <pattern>${log.pattern}</pattern>
-        </encoder>
-        <prudent>true</prudent>
-    </appender>
-    
-    <appender name="springLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.folder}/spring.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>${log.history}</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <charset>${log.encoding}</charset>
-            <pattern>${log.pattern}</pattern>
-        </encoder>
-        <prudent>true</prudent>
-    </appender>
-
-    <!-- Loggers -->
-    <logger name="com.markwal.sdl.healthcheck" level="${log.level}">
-        <appender-ref ref="healthCheckLog"/>
-    </logger>
-    
-    <logger name="org.springframework" level="${log.level}">
-        <appender-ref ref="springLog"/>
-    </logger>
-
-
-    <root level="ERROR">
-        <appender-ref ref="coreLog"/>
+    <root level="WARN">
+        <appender-ref ref="STDOUT" />
     </root>
 
-     
 </configuration>

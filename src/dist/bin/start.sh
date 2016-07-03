@@ -12,6 +12,10 @@ if [ -f \$PID_FILE ]; then
     fi
 fi
 
-java \$JAVA_OPTS -jar ./lib/${jarName} & echo \$! > \$PID_FILE
+if [ -f ./config/logback.xml ]; then
+    JAVA_OPTS="\$JAVA_OPTS -Dlogging.config=file:./config/logback.xml"
+fi
+
+java \$JAVA_OPTS -jar ${jarName} & echo \$! > \$PID_FILE
 
 echo "Started Service Healthceck"

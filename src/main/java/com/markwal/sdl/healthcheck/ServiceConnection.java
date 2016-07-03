@@ -29,21 +29,25 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import com.google.gson.Gson;
 import com.markwal.sdl.healthcheck.config.ServiceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServiceConnection {
 
-	private static final Pattern ERROR_PATTERN = Pattern
-			.compile("\\{.*\"error\":.*");
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceConnection.class);
+
+    private static final Pattern ERROR_PATTERN = Pattern.compile("\\{.*\"error\":.*");
 
 	private ServiceConfig serviceConfig;
 	private OAuthToken token;
-	private Object checkerLock = new Object();
+	private final Object checkerLock = new Object();
 
 	public ServiceConnection(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
@@ -52,29 +56,51 @@ public class ServiceConnection {
 	public ServiceStatus checkStatus() {
 		ServiceStatus status;
 
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Checking status for service '" + serviceConfig.getName() + "'");
+        }
+
 		synchronized (checkerLock) {
 			this.checkToken();
 
-			try (CloseableHttpClient client = this.createClient();) {
-				HttpResponse response = this.executeCheckRequest(client);
-				String responseString = this.readResponse(response);
+			try (CloseableHttpClient client = this.createClient()) {
 
-				if (response.getStatusLine().getStatusCode() == 401) {
-					// authentication issue, request new token and try again
-					this.token = null;
-					this.requestToken();
-					response = this.executeCheckRequest(client);
-				}
+                HttpResponse response = this.executeCheckRequest(client);
+                String responseString = this.readResponse(response);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Response: " + responseString);
+                }
 
-				if (response.getStatusLine().getStatusCode() == 200) {
-					status = new ServiceStatus(this.serviceConfig.getName(),
-							"ok", "ok");
-				} else {
-					status = new ServiceStatus(
-							this.serviceConfig.getName(),
-							"error-" + response.getStatusLine().getStatusCode(),
-							responseString);
-				}
+                if (response.getStatusLine().getStatusCode() == 401) {
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("Received 401 error, refreshing token and trying again");
+                    }
+                    // authentication issue, request new token and try again
+                    this.token = null;
+                    this.requestToken();
+                    response = this.executeCheckRequest(client);
+                }
+
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Received status code: " + response.getStatusLine().getStatusCode());
+                    LOG.info("Received status message: " + response.getStatusLine().getReasonPhrase());
+                }
+
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    status = new ServiceStatus(this.serviceConfig.getName(),
+                            "ok", "ok");
+                } else {
+                    LOG.warn("Received error status code: " + response.getStatusLine().getStatusCode());
+                    LOG.warn("Received error status message: " + response.getStatusLine().getReasonPhrase());
+
+                    status = new ServiceStatus(
+                            this.serviceConfig.getName(),
+                            "error-" + response.getStatusLine().getStatusCode(),
+                            responseString);
+                }
+            } catch (HttpHostConnectException e) {
+                LOG.warn("Connect exception: " + e.getMessage(), e);
+                status = new ServiceStatus(this.serviceConfig.getName(), "error-connect", e.getMessage());
 			} catch (IOException e) {
 				throw new HealthCheckException(e);
 			}
@@ -84,23 +110,36 @@ public class ServiceConnection {
 	}
 
 	private HttpResponse executeCheckRequest(HttpClient client)
-			throws ClientProtocolException, IOException {
+			throws IOException {
+
 		String url = this.serviceConfig.getProtocol() + "://"
 				+ this.serviceConfig.getHost() + ":"
 				+ this.serviceConfig.getPort() + "/"
 				+ this.serviceConfig.getUri();
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Check URL: " + url);
+        }
+
 		HttpGet request = new HttpGet(url);
 		request.setConfig(this.createRequestConfig());
 		request.addHeader("authorization",
 				"Bearer " + this.token.getAccessToken());
 
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Executing check request: " + url);
+        }
+
 		HttpResponse response = client.execute(request);
+
 		return response;
 	}
 
 	private void checkToken() {
-
 		if ((this.token == null) || (token.isExpired())) {
+            if (LOG.isInfoEnabled()) {
+                LOG.info("No token or token is expired, requesting new token");
+            }
 			this.requestToken();
 		}
 	}
@@ -123,6 +162,10 @@ public class ServiceConnection {
 	}
 
 	private void requestToken() {
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Requesting token from: " + this.serviceConfig.getTokenUrl());
+        }
+
 		HttpPost tokenRequest = new HttpPost(this.serviceConfig.getTokenUrl());
 		tokenRequest.addHeader("Accept", "application/json");
 		tokenRequest.addHeader("Content-Type", "application/json");
@@ -139,15 +182,24 @@ public class ServiceConnection {
 			tokenRequest.setEntity(entity);
 
 			response = client.execute(tokenRequest);
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Received status code: " + response.getStatusLine().getStatusCode());
+                LOG.info("Received status message: " + response.getStatusLine().getReasonPhrase());
+            }
 
 			String responseString = this.readResponse(response);
 			if (this.isErrorResponse(responseString)) {
+                LOG.warn("Received error from Token service: " + responseString);
 				this.token = null;
 				throw new TokenException(this.getTokenError(responseString));
 			} else {
 				this.token = this.parseResponseToken(responseString);
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Successfully retrieved a token");
+                }
 			}
 		} catch (IOException e) {
+            LOG.warn("IOException while retrieving token: " + e.getMessage());
 			throw new HealthCheckException(e);
 		}
 
@@ -186,6 +238,7 @@ public class ServiceConnection {
 			InputStream contentStream = entity.getContent();
 			result = IOUtils.toString(contentStream, "UTF-8");
 		} catch (IOException e) {
+            LOG.warn("Error while parsing response: " + e.getMessage());
 			throw new HealthCheckException(e);
 		}
 
