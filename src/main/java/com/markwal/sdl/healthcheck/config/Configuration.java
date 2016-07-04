@@ -41,12 +41,21 @@ public class Configuration {
 
     private static final Logger LOG = LoggerFactory.getLogger(Configuration.class);
     private final Object serviceMapLock = new Object();
+
     @Value("${config.services.file}")
     private String servicesConfig;
+
+    @Value("${config.disable.services.location}")
+    private File disableServicesLocation;
+
     private Map<String, ServiceConfig> serviceMap;
 
     public String getServicesConfig() {
         return this.servicesConfig;
+    }
+
+    public File getDisableServicesLocation() {
+        return this.disableServicesLocation;
     }
 
     public ServiceConfig getServiceInfo(String serviceName) {

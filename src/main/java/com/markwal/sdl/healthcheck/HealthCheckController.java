@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,10 +83,49 @@ public class HealthCheckController {
     }
 
     private ServiceStatus checkService(String serviceName) {
-        ServiceConnection checker = this.getServiceConnection(serviceName);
 
-        ServiceStatus status = checker.checkStatus();
-        return status;
+        if (this.isServiceDisabled(serviceName)) {
+            return new ServiceStatus(serviceName, "disabled", "Disabled by status file");
+        }
+
+        ServiceConnection checker = this.getServiceConnection(serviceName);
+        ServiceStatus serviceStatus = checker.checkStatus();
+
+        return serviceStatus;
+    }
+
+    /**
+     * Checks if a service is disabled. A service is disabled if a file with the same name as the service name exists
+     * in the 'disable services location' which is set by a property 'config.disable.services.location' in the
+     * application.properties file.
+     * <p>
+     * Note that no check is done if the service actually exists in the configuration, if a file with the service name
+     * exists a status of 'disabled' is returned (for performance reasons).
+     *
+     * @param serviceName The name of the service to check.
+     * @return True if the service is disabled.
+     */
+    private boolean isServiceDisabled(String serviceName) {
+        File disableServicesLocation = config.getDisableServicesLocation();
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Checking if service '" + serviceName + "' is disabled; check location: '" + disableServicesLocation + "'");
+        }
+
+        if (disableServicesLocation != null && disableServicesLocation.isDirectory()) {
+            File disabledFile = new File(config.getDisableServicesLocation(), serviceName);
+            if (disabledFile.exists()) {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Service '" + serviceName + "' is disabled by file: '" + disabledFile.getAbsolutePath() + "'");
+                }
+                return true;
+            } else if (LOG.isTraceEnabled()) {
+                LOG.info("File: '" + disabledFile.getAbsolutePath() + "' does not exist, service is not disabbled.");
+
+            }
+        }
+
+        return false;
     }
 
     private ServiceConnection getServiceConnection(String serviceName) {
