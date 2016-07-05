@@ -173,4 +173,15 @@ public class HealthCheckController {
         return new ErrorResponse("HealthCheckException: " + exc.getMessage());
     }
 
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public
+    @ResponseBody
+    ErrorResponse handleException(Exception exc) {
+        LOG.warn("Exception", exc);
+        return new ErrorResponse("Exception: " + exc.getClass().getName() + ": " + exc.getMessage());
+    }
+
+
+
 }
