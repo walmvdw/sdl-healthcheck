@@ -103,10 +103,14 @@ public class Configuration {
             Gson gson = new Gson();
             List<ServiceConfig> serviceList = gson.fromJson(reader, type);
             for (ServiceConfig serviceConfig : serviceList) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Found service '" + serviceConfig.getName() + "'");
+                if (serviceConfig == null) {
+                    LOG.warn("Service configuration contains an empty array element which is ignored");
+                } else {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Found service '" + serviceConfig.getName() + "'");
+                    }
+                    this.serviceMap.put(serviceConfig.getName(), serviceConfig);
                 }
-                this.serviceMap.put(serviceConfig.getName(), serviceConfig);
             }
 
             if (LOG.isInfoEnabled()) {
