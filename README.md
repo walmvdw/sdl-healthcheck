@@ -1,6 +1,16 @@
 # sdl-healthcheck
 
-A simple webapplication that can check the status of SDL CIS micro services.
+A simple web application that can check the status of SDL CIS micro services.
+
+The health check web application functions as a simple proxy server. It provides http endpoints that can be called (without OAuth authentication), 
+these endpoints then call the configured SDL OData micro service, performs authentication and calls the configured URL. This way you can check if 
+the micro service works without having to handle the authentication. 
+
+Typical use case is to configure the endpoints provided in a load balancer which uses the web application to check the availability of a micro service.
+
+In addition to the healt check functionality the web application also provides functionality to temporarily 'disable' a service by placing a file in a 
+(configurable) directory. This way it is possible to disable the service from the load balancer without actually stopping the service (making it easier to debug
+or check issues).
 
 ## Installation
 
@@ -34,6 +44,14 @@ Assuming that the web application is listening on the default port (8091) the UR
 * <http://localhost:8091/status/discovery> (to check the discovery micro service)
 * <http://localhost:8091/all>
 * <http://localhost:8091/reload>
+
+## Disabling services
+
+If you want to use the functionality to disable services you need to configure a directory where the indicator files can be placed. This can be configured by 
+adding a file named `application.properties` to the `config` directory. In the `application.properties` file a property can be set with the name `config.disable.services.location` 
+which points to a directory where indicator files can be placed.
+
+To disable a service named 'discovery' a file (can be empty) must be created in the configured directory with the same name as the service, in this example `discovery`.
 
 ## Building from source
 
