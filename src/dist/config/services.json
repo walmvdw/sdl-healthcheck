@@ -4,7 +4,7 @@
     "host": "localhost",
     "port": 8082,
     "uri": "discovery.svc",
-    "tokenUrl": "http://sdlweb8cd:8082/token.svc",
+    "tokenUrl": "http://localhost:8082/token.svc",
     "clientId": "cduser",
     "clientSecret": "CDUserP@ssw0rd"
   },
@@ -13,7 +13,7 @@
     "host": "localhost",
     "port": 8081,
     "uri": "content.svc",
-    "tokenUrl": "http://sdlweb8cd:8082/token.svc",
+    "tokenUrl": "http://localhost:8082/token.svc",
     "clientId": "cduser",
     "clientSecret": "CDUserP@ssw0rd"
   },
@@ -22,7 +22,7 @@
     "host": "localhost",
     "port": 8084,
     "uri": "httpupload",
-    "tokenUrl": "http://sdlweb8cd:8082/token.svc",
+    "tokenUrl": "http://localhost:8082/token.svc",
     "clientId": "cmuser",
     "clientSecret": "CMUserP@ssw0rd"
   }
