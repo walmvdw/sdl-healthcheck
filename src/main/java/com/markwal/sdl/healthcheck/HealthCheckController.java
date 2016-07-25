@@ -62,7 +62,15 @@ public class HealthCheckController {
         List<ServiceStatus> statuses = new ArrayList<ServiceStatus>();
 
         for (String name : this.config.getAllServiceNames()) {
-            statuses.add(this.checkService(name));
+            ServiceStatus status;
+
+            try {
+                status = this.checkService(name);
+            } catch (HealthCheckException e) {
+                LOG.warn("Exception while checking status for service '" + name + " ': " + e.getMessage(), e);
+                status = new ServiceStatus(name, "error", "Exception: " + e.getMessage());
+            }
+            statuses.add(status);
         }
 
         return statuses;
