@@ -21,7 +21,7 @@ public class ServiceConfig {
     private String name;
     private String protocol;
     private String host;
-    private Integer port;
+    private String port;
     private String uri;
     private String tokenUrl;
     private String clientId;
@@ -39,7 +39,7 @@ public class ServiceConfig {
         return this.host;
     }
 
-    public Integer getPort() {
+    public String getPort() {
         return this.port;
     }
 
