@@ -109,6 +109,7 @@ public class Configuration {
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Found service '" + serviceConfig.getName() + "'");
                     }
+
                     this.serviceMap.put(serviceConfig.getName(), serviceConfig);
                 }
             }

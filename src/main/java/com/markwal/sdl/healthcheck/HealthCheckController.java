@@ -36,16 +36,23 @@ import java.util.Map;
 public class HealthCheckController {
 
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckController.class);
-
+    private final Object connectionsLock = new Object();
     @Autowired
     private Configuration config;
-
     private Map<String, ServiceConnection> connections = new HashMap<String, ServiceConnection>();
 
     @RequestMapping(value = "/reload")
     public String reload() {
         this.config.resetServicesInfo();
+        this.clearConnections();
         return "ok";
+    }
+
+    private void clearConnections() {
+        synchronized (this.connectionsLock) {
+            // there are no resources in the connection that need closing, so we just empty the map
+            this.connections.clear();
+        }
     }
 
     @RequestMapping(value = "/all", produces = "application/json")
@@ -55,7 +62,15 @@ public class HealthCheckController {
         List<ServiceStatus> statuses = new ArrayList<ServiceStatus>();
 
         for (String name : this.config.getAllServiceNames()) {
-            statuses.add(this.checkService(name));
+            ServiceStatus status;
+
+            try {
+                status = this.checkService(name);
+            } catch (HealthCheckException e) {
+                LOG.warn("Exception while checking status for service '" + name + " ': " + e.getMessage(), e);
+                status = new ServiceStatus(name, "error", "Exception: " + e.getMessage());
+            }
+            statuses.add(status);
         }
 
         return statuses;
@@ -133,17 +148,20 @@ public class HealthCheckController {
             LOG.info("Looking up connection to service: " + serviceName);
         }
 
-        ServiceConnection conn = this.connections.get(serviceName);
-        if (conn == null) {
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Creating new connection for service: " + serviceName);
+        synchronized (this.connectionsLock) {
+            ServiceConnection conn = this.connections.get(serviceName);
+            if (conn == null) {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Creating new connection for service: " + serviceName);
+                }
+
+                conn = new ServiceConnection(this.config.getServiceInfo(serviceName));
+                this.connections.put(serviceName, conn);
             }
 
-            conn = new ServiceConnection(this.config.getServiceInfo(serviceName));
-            this.connections.put(serviceName, conn);
+            return conn;
         }
 
-        return conn;
     }
 
     @ExceptionHandler(ServiceNotFoundException.class)
@@ -181,7 +199,6 @@ public class HealthCheckController {
         LOG.warn("Exception", exc);
         return new ErrorResponse("Exception: " + exc.getClass().getName() + ": " + exc.getMessage());
     }
-
 
 
 }

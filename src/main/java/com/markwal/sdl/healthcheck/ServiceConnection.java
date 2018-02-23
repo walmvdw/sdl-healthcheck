@@ -17,7 +17,9 @@
 package com.markwal.sdl.healthcheck;
 
 import com.google.gson.Gson;
+import com.markwal.sdl.healthcheck.config.EnvVarSubstitutor;
 import com.markwal.sdl.healthcheck.config.ServiceConfig;
+import com.tridion.crypto.Crypto;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -34,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +46,7 @@ public class ServiceConnection {
 
     private static final Pattern ERROR_PATTERN = Pattern.compile("\\{.*\"error\":.*");
     private final Object checkerLock = new Object();
+    private final EnvVarSubstitutor envVarSubstitutor = new EnvVarSubstitutor();
     private ServiceConfig serviceConfig;
     private OAuthToken token;
 
@@ -109,10 +113,10 @@ public class ServiceConnection {
     private HttpResponse executeCheckRequest(HttpClient client)
             throws IOException {
 
-        String url = this.serviceConfig.getProtocol() + "://"
-                + this.serviceConfig.getHost() + ":"
-                + this.serviceConfig.getPort() + "/"
-                + this.serviceConfig.getUri();
+        String url = envVarSubstitutor.replace(this.serviceConfig.getProtocol()) + "://"
+                + envVarSubstitutor.replace(this.serviceConfig.getHost()) + ":"
+                + envVarSubstitutor.replace(this.serviceConfig.getPort()) + "/"
+                + envVarSubstitutor.replace(this.serviceConfig.getUri());
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("Check URL: " + url);
@@ -159,19 +163,21 @@ public class ServiceConnection {
     }
 
     private void requestToken() {
+        String tokenUrl = envVarSubstitutor.replace(this.serviceConfig.getTokenUrl());
+
         if (LOG.isInfoEnabled()) {
-            LOG.info("Requesting token from: " + this.serviceConfig.getTokenUrl());
+            LOG.info("Requesting token from: " + tokenUrl);
         }
 
-        HttpPost tokenRequest = new HttpPost(this.serviceConfig.getTokenUrl());
+        HttpPost tokenRequest = new HttpPost(tokenUrl);
         tokenRequest.addHeader("Accept", "application/json");
         tokenRequest.addHeader("Content-Type", "application/json");
 
-        tokenRequest.setConfig(this.createRequestConfig());
+        //tokenRequest.setConfig(this.createRequestConfig());
 
         String requestBody = "grant_type=client_credentials&client_id="
-                + this.serviceConfig.getClientId() + "&client_secret="
-                + this.serviceConfig.getClientSecret();
+                + envVarSubstitutor.replace(this.serviceConfig.getClientId()) + "&client_secret="
+                + this.decryptIfNeeded(envVarSubstitutor.replace(this.serviceConfig.getClientSecret()));
 
         HttpResponse response;
         try (CloseableHttpClient client = this.createClient()) {
@@ -201,6 +207,18 @@ public class ServiceConnection {
         }
 
 
+    }
+
+    private String decryptIfNeeded(String clientSecret) {
+        String result;
+
+        try {
+            result = Crypto.decryptIfNecessary(clientSecret);
+        } catch (GeneralSecurityException e) {
+            throw new HealthCheckException("Error decrypting client secret: " + e.getMessage());
+        }
+
+        return result;
     }
 
     private OAuthToken parseResponseToken(String responseString) {
