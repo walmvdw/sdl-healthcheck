@@ -4,5 +4,5 @@
 /config/
 /build/
 **/node_modules/
-**/dist/
+src/main/resources/public/
 /out/
