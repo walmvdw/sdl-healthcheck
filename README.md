@@ -1,4 +1,5 @@
 # sdl-healthcheck
+[![Build status](https://ci.appveyor.com/api/projects/status/vcersqylnjt970y1/branch/master?svg=true)](https://ci.appveyor.com/project/kunalshetye/sdl-healthcheck/branch/master)
 
 A simple web application that can check the status of SDL CIS micro services.
 
