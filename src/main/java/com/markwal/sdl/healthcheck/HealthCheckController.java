@@ -25,7 +25,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,11 +37,17 @@ import java.util.Map;
 @RestController
 public class HealthCheckController {
 
+    private final String dashboardUrl = "/dashboard.html";
     private static final Logger LOG = LoggerFactory.getLogger(HealthCheckController.class);
     private final Object connectionsLock = new Object();
     @Autowired
     private Configuration config;
     private Map<String, ServiceConnection> connections = new HashMap<String, ServiceConnection>();
+
+    @RequestMapping(value = "/")
+    public void defaultMethod(HttpServletResponse response) throws IOException {
+        response.sendRedirect(dashboardUrl);
+    }
 
     @RequestMapping(value = "/reload")
     public String reload() {
