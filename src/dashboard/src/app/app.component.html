@@ -1,0 +1,38 @@
+<!--<form class="form-inline">
+  <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" ngModel name="searchText">
+</form>-->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">D4SM</a>
+    <button type="button" class="btn btn-primary" (click)="onReloadClick()">Reload Configuration</button>
+</nav>
+<div class="container-fluid">
+    <div class="alert alert-danger" role="alert" *ngIf="hasError"> 
+        {{errorMessage}}
+    </div>
+    <div class="alert alert-info" role="alert" *ngIf="hasInfo"> 
+        {{infoMessage}}
+    </div>
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Service Name</th>
+            <th scope="col">Service Status</th>
+            <th scope="col">Status Message</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody *ngFor="let service of services;let i = index">
+          <tr>
+            <th scope="row">{{i+1}}</th>
+            <td>{{service.serviceName}}</td>
+            <td>{{service.serviceStatus}}</td>
+            <td>{{service.statusMessage}}</td>
+            <td>
+              <a class="btn btn-success" href="#" role="button" *ngIf="service.serviceStatus === 'ok'">Success</a>
+              <a class="btn btn-danger" href="#" role="button" *ngIf="service.serviceStatus !== 'ok'">Error</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+</div>

@@ -1,0 +1,12 @@
+[
+  {
+    "serviceName": "deployer-live-dev",
+    "serviceStatus": "error",
+    "statusMessage": "could not connect to service"
+  },
+  {
+    "serviceName": "deployer-staging-dev",
+    "serviceStatus": "ok",
+    "statusMessage": "ok"
+  }
+]

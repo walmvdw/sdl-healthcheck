@@ -3,3 +3,6 @@
 /.gradle/
 /config/
 /build/
+**/node_modules/
+src/main/resources/public/
+/out/
