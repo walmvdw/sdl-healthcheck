@@ -52,15 +52,20 @@ task dist(type: Zip, dependsOn: bootRepackage) {
     archiveName "${jar.baseName}-${jar.version}.zip"
     from('build/libs') {
         include '*.jar'
+        into('lib')
     }
 
     from('src/dist') {
         expand(jarName: "${jar.baseName}-${jar.version}.jar")
         exclude('**/logback.xml')
+        exclude('**/*.ps1')
+        exclude('**/*.exe')
     }
 
     from('src/dist') {
         include('**/logback.xml')
+        include('**/*.ps1')
+        include('**/*.exe')
     }
 
     from('./') {
